@@ -1,4 +1,4 @@
-class ProductManager {
+/* class ProductManager {
     constructor() {
         this.productos = [];
         this.siguienteId = 1;
@@ -38,22 +38,70 @@ class ProductManager {
         }
         return producto;
     }
-}
+} */
 
- // reviso que funcione...
-const administradorProductos = new ProductManager();
+const fs = require('fs');
 
-try {
-    console.log(administradorProductos.getProducts());
+class ProductManager {
+    constructor(filePath) {
+        this.path = filePath;
+        this.productos = [];
+        this.loadProducts();
+        this.siguienteId = this.productos.length > 0 ? Math.max(...this.productos.map(producto => producto.id)) + 1 : 1;  /* ok */
+    }
 
-    administradorProductos.addProduct('producto prueba', 'Este es un producto prueba', 200, 'Sin imagen', 'abc123', 25);
+    addProduct(title, description, price, thumbnail, code, stock) {  /* modifique el spaniglish :V */
+        const nuevoProducto = {
+            id: this.siguienteId++,
+            title,
+            description,
+            price,
+            thumbnail,
+            code,
+            stock
+        };
+        this.productos.push(nuevoProducto); /* ok */
+        this.saveProducts();
+        return nuevoProducto;
+    }
 
-     console.log(administradorProductos.getProducts());
-    
-    /* administradorProductos.addProduct('producto prueba', 'Este es un producto prueba', 200, 'Sin imagen', 'abc123', 25); */
+    getProducts() {  /* oko */
+        return this.productos;
+    }
 
-    const idProducto = 4; 
-    console.log(administradorProductos.getProductById(idProducto));
-} catch (error) {
-    console.error(error.message);
+    getProductById(id) {
+        const producto = this.productos.find(producto => producto.id === id); /* ok */
+        if (!producto) {
+            throw new Error('no hay producto');
+        }
+        return producto;
+    }
+
+    updateProduct(id, updatedFields) {
+        const index = this.productos.findIndex(producto => producto.id === id); /* ok */
+        if (index === -1) {
+            throw new Error('no hay producto');
+        }
+        this.productos[index] = { ...this.productos[index], ...updatedFields };
+        this.saveProducts();
+        return this.productos[index];
+    }
+
+    deleteProduct(id) {
+        this.productos = this.productos.filter(producto => producto.id !== id); /* ok */
+        this.saveProducts();
+    }
+
+    loadProducts() {  
+        try {
+            const data = fs.readFileSync(this.path, 'utf8'); /* ok */
+            this.productos = JSON.parse(data);
+        } catch (error) {
+            this.productos = [];
+        }
+    }
+
+    saveProducts() {
+        fs.writeFileSync(this.path, JSON.stringify(this.productos, null, 2)); /* ok */
+    }
 }
