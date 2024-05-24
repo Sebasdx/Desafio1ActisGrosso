@@ -1,34 +1,25 @@
-const express = require("express")
-const app = express()
-const ProductManager = require("./ProductManager");
-app.use(express.urlencoded({ extended:true }));
+import express from "express";
+import productsRouter from "./routes/products.router.js";
+import cartRouter from "./routes/cart.router.js";
+import { ProductManager } from './productManager.js';
+import { CartManager } from './CartManager.js';
 
-const PORT = 8080
+const PORT = 8080;
+const app = express();
+const path_Products = "src/data/products.json";
+const path_Cart = "src/data/cart.json";
 
-const productManager = new ProductManager("productos.json");
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.get('/products', (req, res) => {
-    const limit = parseInt(req.query.limit);
-    if (!isNaN(limit) && limit > 0) {
-        const products = productManager.getProducts().slice(0, limit);
-        res.json(products);
-    } else {
-        const allProducts = productManager.getProducts();
-        res.json(allProducts);
-    }
+const productManager = new ProductManager(path_Products);
+const cartManager = new CartManager(path_Cart);
+
+app.use("/api/products", productsRouter);
+app.use("/api/carts", cartRouter);
+
+app.listen(PORT, () => {
+    console.log(`Online Server on port ${PORT}`);
 });
 
-app.get("/products/:id", (req, res) => {
-    const productInt = parseInt(req.params.id);
-    const productsId = productManager.getProductById(productInt);
-    res.send(productsId);
-});
-
-
-
-
-
-app.listen(PORT,() => {
-    console.log("Listening on port 8080")
-})
-
+export { app, productManager, cartManager };
